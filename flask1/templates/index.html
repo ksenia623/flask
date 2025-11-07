@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Поиск</h1>
+    <form action="/result" method="GET">
+        <input type="text" name="query">
+        <button>Найти</button>
+    </form>
+
+    <h1>Телефонная книга:</h1>
+
+    {% for number in phone_book %}
+    <a href="/number?number={{number}}">{{number}}</a>
+    {% endfor %}
+</body>
+
+</html>
