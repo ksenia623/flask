@@ -3,10 +3,15 @@ import uuid
 import json, os, pathlib, hashlib
 app =Flask(__name__)
 app.secret_key = 'iamstupid'
-upload_folder = 'uploads'
-app.config['UPLOAD_FOLDER'] = upload_folder
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+upload_folder_text = 'uploads_text'
+upload_folder = 'uploads'#вот эта
+upload_folder_picture = 'uploads_picture'
+app.config['UPLOAD_FOLDER_TEXT'] = upload_folder_text
+app.config['UPLOAD_FOLDER'] = upload_folder#вот эта
+app.config['UPLOAD_FOLDER_PICTURE'] = upload_folder_picture
+ 
 @app.route('/', methods=['GET', 'POST'])
+
 def upload_file():
     if request.method == 'POST':
         if 'file' not in request.files: 
@@ -25,7 +30,18 @@ def upload_file():
             app.config['UPLOAD_FOLDER'], 
             f"{file_uuid}_{filename}"
         )
-        file.save(filepath)
+        filepath_picture = os.path.join(
+            app.config['UPLOAD_FOLDER_PICTURE'], 
+            f"{file_uuid}_{filename}"
+        )
+        filepath_text = os.path.join(
+            app.config['UPLOAD_FOLDER_TEXT'], 
+            f"{file_uuid}_{filename}"
+        )
+        if file_extension in ('.txt', '.doc', '.docx', '.rtf'):
+            file.save(filepath_text)#вот эта
+        if file_extension in ('.png', '.jpg', '.bmp'):
+            file.save(filepath_picture)
         if check_hash(filepath) == False:
             os.remove(filepath)
             flash('Файл уже существует', 'error')
@@ -35,6 +51,7 @@ def upload_file():
         flash("Файл успешно загружен", 'success')
         return redirect('/')
     return render_template('form.html')
+
 def hash_find(filename):
     hash_md5 = hashlib.md5()
     with open(filename, 'rb') as f:
@@ -55,22 +72,24 @@ def metadata(filename, file_uuid, hesh_md5):
     }
     data.append(met)
 
-    with open('files.json', 'w') as f:
-        json.dump(data, f, indent=2)
+    with open('files.json', 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2)#вот тут
      
     
 def check_hash(filename):
     file_hash = hash_find(filename)
+    data = [] 
     if os.path.exists('files.json'):
-        with open('files.json', 'r') as f:
+         with open('files.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
-    else:
-        data = [] 
+
 
     # Ищем совпадение по хешу
     for record in data:
         if record['hesh'] == file_hash:
             return False  # Дубликат найден
     return True  # Дубликатов нет
+
+
 if __name__ == '__main__':
     app.run(debug=True)
